@@ -2,12 +2,6 @@
 
 library(rjags);library(coda);
 
-if(file.exists("C:/Users/jonazose")){
-  setwd("C:/Users/jonazose/Dropbox/RA/Code/flows/")
-}else{
-  setwd("C:/Users/Jon-Everyday/Dropbox/RA/Code/flows/")
-}
-
 ###############
 #Read in data.#
 ###############
@@ -16,8 +10,10 @@ setup=function(){
   
   if(file.exists("C:/Users/jonazose")){
     setwd("C:/Users/jonazose/Dropbox/RA/Code/flows/")
+  }else if(file.exists("C:/Users/Jon-Everyday")){
+    setwd("C:/Users/Jon-Everyday/Dropbox/RA/Code/flows/flows_git/")
   }else{
-    setwd("C:/Users/Jon-Everyday/Dropbox/RA/Code/flows/")
+    setwd("/homes/jonazose/RA/flows_git/flows/")
   }
   
   #Read in data
@@ -100,7 +96,7 @@ x=as.vector(flowMatrix[c(1,2,3),]);
 
 
 #Choose a small sample from the y and x vectors
-sampleFraction=0.01 #Use only 1% of the data for fitting
+sampleFraction=1 #Use all of the data for fitting
 compressedDataSize=floor(sampleFraction*length(y))
 compressedDataIndices=sort(sample.int(n=length(y),size=compressedDataSize))
 smallY=y[compressedDataIndices];
@@ -110,53 +106,20 @@ smallX=x[compressedDataIndices];
 #Run through JAGS#
 ##################
 
-# #The uncompressed version
-# jags <- jags.model('model2.bug.R',
-#                    data = list('n' = length(y),
-#                                'hist' = x,
-#                                'f' = y),
-#                    n.chains = 4,
-#                    n.adapt = 5000)
-
 #The compressed version
-jags <- jags.model('model2.bug.R',
+jags <- jags.model('model3.bug.R',
                    data=list('n' = compressedDataSize,
                              'hist' = smallX,
                              'f' = smallY),
                    n.chains = 4,
-                   n.adapt = 1000)
+                   n.adapt = 100)
 
-update(jags, 10000)
+update(jags, 100)
 
 samples=coda.samples(jags,
                      c('alpha1','alpha2'),
-                     5000,
-                     thin=1)
+                     100,
+                     thin=5)
 
 sampleData=as.matrix(rbind(samples[[1]],samples[[2]],samples[[3]],samples[[4]]))
-plot(sampleData[,1])
-plot(sampleData[,2])
-hist(sampleData)
-#write(sampleData,"model2Output_August6.txt")
-#August 6 output used 1000 for adaptation, 200000 for update, and 5000 draws, thinned by 250.
-plot(density(sampleData[,1]));mean(sampleData[,1]);
-plot(sampleData[,1],sampleData[,2],xlab="alpha1",ylab="alpha2")
-
-
-
-
-
-#####################
-#Look at geometry of posterior density surface
-#####################
-
-#UNFINISHED
-
-logLik=function(xVec,yVec,alpha1,alpha2){
-  l=0;
-  for(i in 1:length(xVec)){
-    lambda=exp(alpha1*log(hist[i]+1)+alpha2*eps[i])
-    l=l+
-  }
-  return(l);
-}
+write(sampleData,"./Output/model3output.txt")
