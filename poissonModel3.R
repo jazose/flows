@@ -118,7 +118,7 @@ update(jags, 100)
 
 samples=coda.samples(jags,
                      c('alpha1','alpha2'),
-                     100,
+                     1000,
                      thin=5)
 
 sampleData=as.matrix(rbind(samples[[1]],samples[[2]],samples[[3]],samples[[4]]))
