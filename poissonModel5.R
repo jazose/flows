@@ -1,5 +1,6 @@
 #Run a simulated Poisson hierarchical model.
-#Model 4 takes log(lambda) to be a linear combination of log(previous flow + 1), log(pop. at origin), and log(pop. at destination)
+#Model 5 takes log(lambda) to be a linear combination of log(previous flow + 1), log(pop. at origin), and log(pop. at destination),
+#   and also the various distance metrics.
 
 library(rjags);library(coda);
 
@@ -10,7 +11,7 @@ library(rjags);library(coda);
 setup=function(){
   
   if(file.exists("C:/Users/jonazose")){
-    setwd("C:/Users/jonazose/Dropbox/RA/Code/flows/")
+    setwd("C:/Users/jonazose/Dropbox/RA/Code/flows/flows_git")
   }else if(file.exists("C:/Users/Jon-Everyday")){
     setwd("C:/Users/Jon-Everyday/Dropbox/RA/Code/flows/flows_git/")
   }else{
@@ -127,21 +128,25 @@ smallX=x[compressedDataIndices];
 ##################
 
 #The compressed version
-jags <- jags.model('model4.bug.R',
+jags <- jags.model('model5.bug.R',
                    data=list('n' = compressedDataSize,
                              'hist' = smallX,
                              'f' = smallY,
                              'o' = oVec,
-                             'd' = dVec),
+                             'd' = dVec,
+                             'dist1' = rep(distanceMatrix[1,],3),
+                             'dist2' = rep(distanceMatrix[2,],3),
+                             'dist3' = rep(distanceMatrix[3,],3),
+                             'dist4' = rep(distanceMatrix[4,],3)),
                    n.chains = 4,
                    n.adapt = 100)
 
-update(jags, 500)
+update(jags, 100)
 
 samples=coda.samples(jags,
-                     c('alpha1','alpha2','alpha3','beta'),
-                     1000,
+                     c('alpha1','alpha2','alpha3','beta','delta1','delta2','delta3','delta4'),
+                     100,
                      thin=5)
 
 sampleData=as.matrix(rbind(samples[[1]],samples[[2]],samples[[3]],samples[[4]]))
-write(sampleData,"./Output/model4output.txt")
+write(sampleData,"./Output/model5output.txt")
