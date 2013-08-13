@@ -141,11 +141,11 @@ jags <- jags.model('model5.bug.R',
                    n.chains = 4,
                    n.adapt = 100)
 
-update(jags, 100)
+update(jags, 500)
 
 samples=coda.samples(jags,
                      c('alpha1','alpha2','alpha3','beta','delta1','delta2','delta3','delta4'),
-                     100,
+                     1000,
                      thin=5)
 
 sampleData=as.matrix(rbind(samples[[1]],samples[[2]],samples[[3]],samples[[4]]))
