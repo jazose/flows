@@ -1,15 +1,10 @@
-#Run a simulated Poisson hierarchical model.
-
-library(rjags);library(coda);
-
-###############
-#Read in data.#
-###############
+#Given input in the form of draws from the posterior distributions for Model 3,
+#generate a sequence of simulated flows.
 
 setup=function(){
   
   if(file.exists("C:/Users/jonazose")){
-    setwd("C:/Users/jonazose/Dropbox/RA/Code/flows/")
+    setwd("C:/Users/jonazose/Dropbox/RA/Code/flows/flows_git")
   }else if(file.exists("C:/Users/Jon-Everyday")){
     setwd("C:/Users/Jon-Everyday/Dropbox/RA/Code/flows/flows_git/")
   }else{
@@ -86,40 +81,59 @@ setup=function(){
 
 setup();
 
-#Use for annual data
-#y=as.vector(flowMatrix[c(15,25,35),])
-#x=as.vector(flowMatrix[c(5,15,25),])
-
 #Use for decadal data
 y=as.vector(flowMatrix[c(2,3,4),]);
 x=as.vector(flowMatrix[c(1,2,3),]);
 
+#Construct vectors of origin and destination populations at beginning of the decade
+oVec=numeric(0);
+dVec=numeric(0);
+for(j in 1:3){
+  temp=rep(0,length(originVector));
+  for(i in 1:length(originVector)){
+    countryIndex=which(shortCountryList==originVector[i])
+    temp[i]=popDatMatrix[countryIndex,j]
+  }
+  oVec=c(oVec,temp);
+  
+  temp=rep(0,length(destVector));
+  for(i in 1:length(destVector)){
+    countryIndex=which(shortCountryList==destVector[i])
+    temp[i]=popDatMatrix[countryIndex,j]
+  }
+  dVec=c(dVec,temp);
+}
 
-#Choose a small sample from the y and x vectors
-sampleFraction=1 #Use all of the data for fitting
-compressedDataSize=floor(sampleFraction*length(y))
-compressedDataIndices=sort(sample.int(n=length(y),size=compressedDataSize))
-smallY=y[compressedDataIndices];
-smallX=x[compressedDataIndices];
+generateFlows3=function(history, paramFile){
+  #Generate predictions and return a matrix of medians and 80% and 95% confidence bounds
+  
+  #First, read in the posterior draws for alpha1 and alpha2.
+  paramData=scan(paramFile);
+  #Split into components
+  nPosteriorDraws=length(paramData)/2;
+  alpha1=paramData[1:nPosteriorDraws];
+  beta=paramData[(nPosteriorDraws+1):(2*nPosteriorDraws)];
+  
+  #Initialize a matrix for simulation results
+  simulatedFlows=matrix(0,nrow=nPosteriorDraws,ncol=length(history));
+  for(i in 1:nPosteriorDraws){
+    temp=rep(0,length(history));
+    lambdaVec = exp(alpha1[i]*log(history+1)+beta[i])
+    temp=rpois(n=length(history),lambda=lambdaVec)
+    simulatedFlows[i,]=temp;
+  }
+  
+  return(simulatedFlows);
+}
 
-##################
-#Run through JAGS#
-##################
+simulatedFlows=generateFlows3(x, "./Output/model3Output.txt")
+medianVec=rep(0,length(x));
+for(i in 1:length(x)){
+  medianVec[i]=median(simulatedFlows[,i])
+}
 
-#The compressed version
-jags <- jags.model('model3.bug.R',
-                   data=list('n' = compressedDataSize,
-                             'hist' = smallX,
-                             'f' = smallY),
-                   n.chains = 4,
-                   n.adapt = 100)
-
-update(jags, 100)
-
-samples=coda.samples(jags,
-                     c('alpha1','beta'),
-                     1000,
-                     thin=5)
-
-sampleData=as.matrix(rbind(samples[[1]],samples[[2]],samples[[3]],samples[[4]]))
-write(sampleData,"./Output/model3output.txt")
+#Return a mean absolute value of the median predictions minus the true values
+MAE=mean(abs(y-medianVec));
+cat("MAE =",MAE);
+MAE_log=mean(abs(log(y+1)-log(medianVec+1)));
+cat("MAE_log =",MAE_log)
