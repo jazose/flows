@@ -7,6 +7,8 @@ setup=function(){
     setwd("C:/Users/jonazose/Dropbox/RA/Code/flows/flows_git")
   }else if(file.exists("C:/Users/Jon-Everyday")){
     setwd("C:/Users/Jon-Everyday/Dropbox/RA/Code/flows/flows_git/")
+  }else if(file.exists("C:/Users/Jon")){
+    setwd("C:/Users/Jon/Dropbox/RA/Code/flows/flows_git/")
   }else{
     setwd("/homes/jonazose/RA/flows_git/flows/")
   }
@@ -123,17 +125,49 @@ generateFlows3=function(history, paramFile){
     simulatedFlows[i,]=temp;
   }
   
-  return(simulatedFlows);
+  resultMatrix=matrix(0,nrow=length(x),ncol=5);
+  for(i in 1:length(x)){
+    resultMatrix[i,]=quantile(simulatedFlows[,i],c(0.025,0.1,0.5,0.9,0.975))
+  }
+  
+  return(resultMatrix);
 }
 
-simulatedFlows=generateFlows3(x, "./Output/model3Output.txt")
-medianVec=rep(0,length(x));
-for(i in 1:length(x)){
-  medianVec[i]=median(simulatedFlows[,i])
-}
+r=generateFlows3(x, "./Output/model3Output.txt")
+
 
 #Return a mean absolute value of the median predictions minus the true values
-MAE=mean(abs(y-medianVec));
+MAE=mean(abs(y-r[,3]));
 cat("MAE =",MAE);
-MAE_log=mean(abs(log(y+1)-log(medianVec+1)));
+MAE_log=mean(abs(log(y+1)-log(r[,3]+1)));
 cat("MAE_log =",MAE_log)
+maxAbsError=max(abs(y-r[,3]));
+cat("Max error =",maxAbsError);
+
+#Interval scores
+#80% I.S.
+is80=sum(r[,4]-r[,2]);
+for(i in 1:nrow(r)){
+  if(y[i]<r[i,2]){is80=is80+2/0.2*(r[i,2]-y[i]);}
+  if(y[i]>r[i,4]){is80=is80+2/0.2*(y[i]-r[i,4]);}  
+}
+is80=is80/length(y)
+cat("80% Interval score =",is80)
+
+#95% I.S.
+is95=sum(r[,5]-r[,1]);
+for(i in 1:nrow(r)){
+  if(y[i]<r[i,1]){is95=is95+2/0.2*(r[i,1]-y[i]);}
+  if(y[i]>r[i,5]){is95=is95+2/0.2*(y[i]-r[i,5]);}  
+}
+is95=is95/length(y)
+cat("95% Interval score =",is95)
+
+#######################
+#Confidence interval inclusion
+#######################
+#80% CI
+inclusion80=(y>=r[,2])&(y<=r[,4])
+cat("80% Inclusion =",mean(inclusion80))
+inclusion95=(y>=r[,1])&(y<=r[,5])
+cat("95% Inclusion =",mean(inclusion95))
