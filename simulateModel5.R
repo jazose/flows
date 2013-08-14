@@ -143,7 +143,7 @@ generateFlows5=function(history, paramFile){
   return(resultMatrix);
 }
 
-r=generateFlows5(x, "./Output/model4Output.txt")
+r=generateFlows5(x, "./Output/model5Output.txt")
 
 
 #Return a mean absolute value of the median predictions minus the true values
