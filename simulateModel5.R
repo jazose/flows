@@ -167,8 +167,8 @@ cat("80% Interval score =",is80)
 #95% I.S.
 is95=sum(r[,5]-r[,1]);
 for(i in 1:nrow(r)){
-  if(y[i]<r[i,1]){is95=is95+2/0.2*(r[i,1]-y[i]);}
-  if(y[i]>r[i,5]){is95=is95+2/0.2*(y[i]-r[i,5]);}  
+  if(y[i]<r[i,1]){is95=is95+2/0.05*(r[i,1]-y[i]);}
+  if(y[i]>r[i,5]){is95=is95+2/0.05*(y[i]-r[i,5]);}  
 }
 is95=is95/length(y)
 cat("95% Interval score =",is95)

@@ -1,7 +1,4 @@
 #Run a simulated Poisson hierarchical model.
-#Model 5 takes log(lambda) to be a linear combination of log(previous flow + 1), log(pop. at origin), and log(pop. at destination),
-#   and also the various distance metrics.
-#Just like model 5, but includes a couple more distance metrics.
 
 library(rjags);library(coda);
 
@@ -91,10 +88,6 @@ setup=function(){
 
 setup();
 
-#Use for annual data
-#y=as.vector(flowMatrix[c(15,25,35),])
-#x=as.vector(flowMatrix[c(5,15,25),])
-
 #Use for decadal data
 y=as.vector(flowMatrix[c(2,3,4),]);
 x=as.vector(flowMatrix[c(1,2,3),]);
@@ -131,28 +124,27 @@ smallX=x[compressedDataIndices];
 ##################
 
 #The compressed version
-jags <- jags.model('model6.bug.R',
+jags <- jags.model('model0NoHistory.bug.R',
                    data=list('n' = compressedDataSize,
-                             'hist' = smallX,
-                             'f' = smallY,
-                             'o' = oVec,
-                             'd' = dVec,
-                             'dist1' = rep(distanceMatrix[1,],3),
-                             'dist2' = rep(distanceMatrix[2,],3),
-                             'dist3' = rep(distanceMatrix[3,],3),
-                             'dist4' = rep(distanceMatrix[4,],3),
-                             'dist5' = rep(distanceMatrix[5,],3),
-                             'dist6' = rep(distanceMatrix[6,],3),
+                             'f' = smallY),
+                             #'o' = oVec,
+                             #'d' = dVec,
+                             #'dist1' = rep(distanceMatrix[1,],3),
+                             #'dist2' = rep(distanceMatrix[2,],3),
+                             #'dist3' = rep(distanceMatrix[3,],3),
+                             #'dist4' = rep(distanceMatrix[4,],3),
+                             #'dist5' = rep(distanceMatrix[5,],3),
+                             #'dist6' = rep(distanceMatrix[6,],3),
                              'dist7' = rep(distanceMatrix[7,],3)),
                    n.chains = 4,
                    n.adapt = 100)
 
-update(jags, 750)
+update(jags, 500)
 
 samples=coda.samples(jags,
-                     c('alpha1','alpha2','alpha3','beta','delta1','delta2','delta3','delta4'),
+                     c('alpha2','alpha3','beta','delta7','sigma'),
                      1000,
                      thin=5)
 
 sampleData=as.matrix(rbind(samples[[1]],samples[[2]],samples[[3]],samples[[4]]))
-write(sampleData,"./Output/model6output.txt")
+write(sampleData,"./Output/model0output.txt")
