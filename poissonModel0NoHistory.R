@@ -126,9 +126,9 @@ smallX=x[compressedDataIndices];
 #The compressed version
 jags <- jags.model('model0NoHistory.bug.R',
                    data=list('n' = compressedDataSize,
-                             'f' = smallY),
-                             #'o' = oVec,
-                             #'d' = dVec,
+                             'f' = smallY,
+                             'o' = oVec,
+                             'd' = dVec,
                              #'dist1' = rep(distanceMatrix[1,],3),
                              #'dist2' = rep(distanceMatrix[2,],3),
                              #'dist3' = rep(distanceMatrix[3,],3),
