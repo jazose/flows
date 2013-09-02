@@ -139,7 +139,7 @@ jags <- jags.model('model0NoHistory.bug.R',
                    n.chains = 4,
                    n.adapt = 100)
 
-update(jags, 500)
+update(jags, 2500)
 
 samples=coda.samples(jags,
                      c('alpha2','alpha3','beta','delta7','sigma'),

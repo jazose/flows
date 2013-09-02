@@ -4,7 +4,7 @@ model {
     lambda[i] <- exp(alpha2*log(o[i])+alpha3*log(d[i])+
                        #delta1*dist1[i]+delta2*dist2[i]+delta3*dist3[i]+delta4*dist4[i]+
                        #delta5*dist5[i]+delta6*dist6[i]+
-                       delta7*dist7[i]+
+                       delta7*log(dist7[i])+
                        epsilon[i])
     epsilon[i] ~ dnorm(beta, tau)
   }
